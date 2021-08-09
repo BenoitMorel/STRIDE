@@ -94,9 +94,7 @@ class Node(object):
             raise Exception("Don't know which of the 3 to return")
             # should it be self.get_grandchild_species_clades(children[-1])
             return [self.get_grandchild_species_clades(c) for c in children]            
-        print(self.node)
         ancestors = self.node.get_ancestors() # ordered list starting with parent and progressing upwards
-        print(len(ancestors))
         c = ancestors[0]
         # must be at least one ancestor
         ch_temp = c.get_children()
@@ -236,7 +234,6 @@ def SaveTree(tree, root_clade, cladeName, treeName, iExample):
     fn = outputDir + "/%s_%s_%d_%d.tre" % (cladeName, os.path.split(treeName)[1].split(".")[0], iExample, len(root_clade))
     t = RootAtClade(tree, root_clade)
     t.write(outfile = fn)
-    print(fn)
     
 def StoreGeneSets(t):
     for node in t.traverse('postorder'):
@@ -343,7 +340,6 @@ def SupportedHierachies(t, G, S, GeneToSpecies, species, dict_clades, clade_name
     """
     Only get the species sets in the first instance as work out the clades as and when
     """
-    print(treeName)
     qAncient = False
     supported = defaultdict(int)
     genesPostDup = set()
@@ -671,7 +667,6 @@ def Main_Full(args):
 *                                                                          *
 ****************************************************************************"""
 #    text = "STRIDE: Species Tree Root Inference from Gene Duplication Events"
-    print(text[1:])
     outputDir = args.outputDir #CreateNewWorkingDirectory(args.gene_trees + "/../STRIDE_Results")
 #    print(text + "\n" + "="*len(text))
     try:
