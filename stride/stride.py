@@ -94,7 +94,9 @@ class Node(object):
             raise Exception("Don't know which of the 3 to return")
             # should it be self.get_grandchild_species_clades(children[-1])
             return [self.get_grandchild_species_clades(c) for c in children]            
+        print(self.node)
         ancestors = self.node.get_ancestors() # ordered list starting with parent and progressing upwards
+        print(len(ancestors))
         c = ancestors[0]
         # must be at least one ancestor
         ch_temp = c.get_children()
@@ -341,6 +343,7 @@ def SupportedHierachies(t, G, S, GeneToSpecies, species, dict_clades, clade_name
     """
     Only get the species sets in the first instance as work out the clades as and when
     """
+    print(treeName)
     qAncient = False
     supported = defaultdict(int)
     genesPostDup = set()
@@ -610,7 +613,7 @@ def WriteResults(species_tree_fn_or_text, roots, S, clades, clusters_counter, ou
         if not n.is_leaf():
             n.name = "N%d" % iNode
             iNode+=1
-    species_tree.write(outfile=output_dir + "Species_tree_labelled.tre", format=1)
+    species_tree.write(outfile=os.path.join(output_dir, "Species_tree_labelled.tre"), format=1)
 #    print(species_tree)
 #    species_tree = ete.Tree(output_dir + "Species_tree_labelled.tre", format=1)
     # Calculate probabilities
@@ -625,7 +628,7 @@ def WriteResults(species_tree_fn_or_text, roots, S, clades, clusters_counter, ou
         print("To get a probability distribution for the root, please supply a fully resolved input species tree")
     # Write numbers of duplications
     table = dict()
-    new_tree = ete.Tree(output_dir + "Species_tree_labelled.tre", format=1)
+    new_tree = ete.Tree(os.path.join(output_dir, "Species_tree_labelled.tre"), format=1)
     for clade in clades + [frozenset([s]) for s in S]:
         qAnti = False
         anticlade = S.difference(clade)
@@ -644,7 +647,7 @@ def WriteResults(species_tree_fn_or_text, roots, S, clades, clusters_counter, ou
         else:
             p = 0.
         table[node.name] = [node.name, "X" if (clade in roots or anticlade in roots) else "", "%0.1f%%" % (100.*p) , X, clusters_counter[y]]
-    with open(output_dir + "Duplication_counts.csv", 'wb') as outfile:
+    with open(os.path.join(output_dir, "Duplication_counts.csv"), 'wb') as outfile:
         writer = csv.writer(outfile, delimiter="\t")
         writer.writerow(["Branch", "MP Root", "Probability", "Duplications supporting clade", "Duplications supporting opposite clade"])
         qSingle = len(thisRoot) == 1
@@ -669,7 +672,12 @@ def Main_Full(args):
 ****************************************************************************"""
 #    text = "STRIDE: Species Tree Root Inference from Gene Duplication Events"
     print(text[1:])
+    outputDir = args.outputDir #CreateNewWorkingDirectory(args.gene_trees + "/../STRIDE_Results")
 #    print(text + "\n" + "="*len(text))
+    try:
+      os.mkdir(outputDir)
+    except:
+      pass
     GeneToSpecies = GeneToSpecies_dash
     if args.separator and args.separator == "dot":
         GeneToSpecies = GeneToSpecies_dot  
@@ -683,7 +691,7 @@ def Main_Full(args):
     if not args.directory:
         speciesTree = ete.Tree(args.Species_tree, format=spTreeFormat)
         species, dict_clades, clade_names = AnalyseSpeciesTree(speciesTree)
-        c, stride_dup_genes = SupportedHierachies_wrapper(args.gene_trees, GeneToSpecies, species, dict_clades, clade_names)      
+        c, stride_dup_genes = SupportedHierachies_wrapper(args.gene_trees, GeneToSpecies, species, dict_clades, clade_names) 
         for k, v in c.items(): print((k, v))
     elif args.debug:
         speciesTree = ete.Tree(args.Species_tree, format=spTreeFormat)
@@ -703,7 +711,6 @@ def Main_Full(args):
 #        roots, clusters_counter, _, nSupport, clades, species = GetRoot(args.Species_tree, args.gene_trees, GeneToSpecies, nProcs, treeFmt = 1, qWriteDupTrees=args.output)
         roots, clusters_counter, _, nSupport, clades, species, all_stride_dup_genes = GetRoot(args.Species_tree, args.gene_trees, GeneToSpecies, nProcs)
         PrintRootingSummary(roots, clusters_counter, nSupport)
-        outputDir = CreateNewWorkingDirectory(args.gene_trees + "/../STRIDE_Results")
 #        shelveFN = outputDir + "STRIDE_data.shv"
 #        d = shelve.open(shelveFN)
 #        d['roots'] = roots
@@ -729,7 +736,7 @@ if __name__ == "__main__":
     parser.add_argument("-S", "--Species_tree", help="Unrooted species tree in newick format")
     parser.add_argument("-d", "--directory", action="store_true", help="Process all trees in input directory")
     parser.add_argument("--debug", action="store_true", help="Run in serial to enable easier debugging")
-#    parser.add_argument("-o", "--output", action="store_true", help="Write out gene trees rooted at duplications")
+    parser.add_argument("-o", "--output", dest="outputDir", help="")
     parser.set_defaults(Func=Main_Full)   
     args = parser.parse_args()
 #    if args.output:
